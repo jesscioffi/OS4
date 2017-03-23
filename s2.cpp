@@ -1,6 +1,4 @@
-// Esmeralda Cervantes and Jessica Cioffi
-// Operating Systems Project 4
-
+// Esmeralda Cervantes
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -8,20 +6,8 @@
 #include <sstream>
 #include <algorithm>
 #include <vector>
-#include <curl/curl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <utility>
-
 
 using namespace std;
-
-struct MemoryStruct {
-  char *memory;
-  size_t size;
-};
 
 void error(string message){
     cout << "ERROR: " << message << endl;
@@ -43,64 +29,6 @@ vector<string> get(char const* ofile){
     }
     ifs.close();
     return vstrings;
-}
-
-static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp) {
-  size_t realsize = size *nmemb;
-  struct MemoryStruct *mem = (struct MemoryStruct *)userp;
-
-  mem->memory = (char *) realloc(mem->memory, mem->size + realsize + 1);
-  if(mem->memory == NULL) {
-    printf("Not enough memory (realloc returned NULL)\n");
-    return 0;
-  }
-
-  memcpy(&(mem->memory[mem->size]), contents, realsize);
-  mem->size += realsize;
-  mem->memory[mem->size] = 0;
-
-  return realsize;
-}
-
-MemoryStruct webFetcher(string website) {
-  CURL *curl_handle;
-  CURLcode res;
-  struct MemoryStruct chunk;
-  chunk.memory = (char *)malloc(1);
-  chunk.size = 0;
-
-  curl_global_init(CURL_GLOBAL_ALL);
-  curl_handle = curl_easy_init();
-  curl_easy_setopt(curl_handle, CURLOPT_URL, website.c_str());
-  curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-  curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
-  curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-  res = curl_easy_perform(curl_handle);
-
-  if(res != CURLE_OK) {
-    fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-  }
-  else {
-    printf("%lu bytes retrieved\n", (long)chunk.size);
-  }
-
-  curl_easy_cleanup(curl_handle);
-  free(chunk.memory);
-  curl_global_cleanup();
-
-  return chunk;
-}  
-
-int wordCount(string file, string phrase) {
-   int counter = 0;
-   size_t index = -1;
-   do {
-      index = file.find(phrase, index+1);
-      if (index != string::npos) {
-         counter++;
-      }
-   } while (index != string::npos);
-   return counter;
 }
 
 int main (int argc, char *argv[]){
@@ -160,7 +88,7 @@ int main (int argc, char *argv[]){
             SITE_FILE = t[1];
         }
         else{
-            cout << "WARNING: Unknown parameter " << t[0] << endl;
+            cout << "WARNING: Unkown parameter " << t[0] << endl;
         }
 
     }   
@@ -170,12 +98,15 @@ int main (int argc, char *argv[]){
     }
     char const* cstr = SEARCH_FILE.c_str();
     vector<string> searches = get(cstr);
-    cout << "here" << endl;
+//    cout << "here" << endl;
     for (unsigned j = 0; j < searches.size(); j++){
         cout << searches[j] << endl;
     }
-
-    cout << webFetcher("www.cnn.com/").memory << endl;
+    char const* sstr = SITE_FILE.c_str();
+    vector<string> sites = get(sstr);
+    for (unsigned j = 0; j < sites.size(); j++){
+        cout << sites[j] << endl;
+    }
 //    cout << PERIOD_FETCH << endl;
 //    cout << NUM_FETCH << endl;
 //    cout << NUM_PARSE << endl;

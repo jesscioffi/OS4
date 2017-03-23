@@ -4,7 +4,7 @@ CFLAGS=-Wall
 all: site-tester
 
 site-tester: site-tester.o
-	$(CC) -o site-tester site-tester.o
+	$(CC) -lcurl -o site-tester site-tester.o
 
 site-tester.o:
 	$(CC) $(CFLAGS) -c site-tester.cpp
