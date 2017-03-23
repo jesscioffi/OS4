@@ -23,6 +23,8 @@ struct MemoryStruct {
   size_t size;
 };
 
+struct MemoryStruct chunk;
+
 void error(string message){
     cout << "ERROR: " << message << endl;
     exit(1);
@@ -62,10 +64,11 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
   return realsize;
 }
 
-MemoryStruct webFetcher(string website) {
+//MemoryStruct webFetcher(string website) {
+  void webFetcher(string website) {
   CURL *curl_handle;
   CURLcode res;
-  struct MemoryStruct chunk;
+//  struct MemoryStruct chunk;
   chunk.memory = (char *)malloc(1);
   chunk.size = 0;
 
@@ -78,17 +81,19 @@ MemoryStruct webFetcher(string website) {
   res = curl_easy_perform(curl_handle);
 
   if(res != CURLE_OK) {
-    fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-  }
+//    fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+    cout << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
+    }
   else {
-    printf("%lu bytes retrieved\n", (long)chunk.size);
+//    printf("%lu bytes retrieved\n", (long)chunk.size);
+    cout << chunk.size << " bytes retrived" << endl;
   }
 
   curl_easy_cleanup(curl_handle);
   //free(chunk.memory);
-  //curl_global_cleanup();
+  curl_global_cleanup();
 
-  return chunk;
+//  return chunk;
 }  
 
 int wordCount(string file, string phrase) {
@@ -172,7 +177,11 @@ int main (int argc, char *argv[]){
     char const* sstr = SITE_FILE.c_str();
     vector<string> sites = get(sstr);
     for (size_t i = 0; i < sites.size(); i++){
-        cout << webFetcher(sites[i]).memory << endl;
+        webFetcher(sites[i]);
+        cout << chunk.memory << endl;
+        free(chunk.memory);
+  //       cout << webFetcher(sites[i]).memory << endl;
+ //       free(webFetcher(sites[i]).memory);
     }
 //    cout << PERIOD_FETCH << endl;
 //    cout << NUM_FETCH << endl;
