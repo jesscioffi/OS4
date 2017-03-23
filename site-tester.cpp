@@ -86,7 +86,7 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
     }
   else {
 //    printf("%lu bytes retrieved\n", (long)chunk.size);
-    cout << chunk.size << " bytes retrived" << endl;
+//    cout << chunk.size << " bytes retrived" << endl;
   }
 
   curl_easy_cleanup(curl_handle);
@@ -103,10 +103,14 @@ int wordCount(string file, string phrase) {
       index = file.find(phrase, index+1);
       if (index != string::npos) {
          counter++;
+  //      cout << "counter is " << counter << " index is: " << index << endl;
       }
    } while (index != string::npos);
+//    cout << "last counter is " << counter << endl;
    return counter;
 }
+
+vector<string> curlfetch;
 
 int main (int argc, char *argv[]){
     if (argc == 1){ // not enough arguments given in command line
@@ -178,10 +182,18 @@ int main (int argc, char *argv[]){
     vector<string> sites = get(sstr);
     for (size_t i = 0; i < sites.size(); i++){
         webFetcher(sites[i]);
-        cout << chunk.memory << endl;
+        curlfetch.push_back(chunk.memory);
+//        cout << chunk.memory << endl;
         free(chunk.memory);
   //       cout << webFetcher(sites[i]).memory << endl;
  //       free(webFetcher(sites[i]).memory);
+    }
+
+    for (size_t j = 0; j < sites.size(); j++){
+        for (size_t i = 0; i < searches.size(); i++){
+            cout << sites[j] << " : " << searches[i] << " : " << wordCount(curlfetch[j], searches[i]) << endl;
+//            int o = wordCount(curlfetch[j], searches[i]);
+        }
     }
 //    cout << PERIOD_FETCH << endl;
 //    cout << NUM_FETCH << endl;
