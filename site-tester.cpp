@@ -85,8 +85,8 @@ MemoryStruct webFetcher(string website) {
   }
 
   curl_easy_cleanup(curl_handle);
-  free(chunk.memory);
-  curl_global_cleanup();
+  //free(chunk.memory);
+  //curl_global_cleanup();
 
   return chunk;
 }  
@@ -105,8 +105,7 @@ int wordCount(string file, string phrase) {
 
 int main (int argc, char *argv[]){
     if (argc == 1){ // not enough arguments given in command line
-        cout << "ERROR: Configuration file needed" << endl;
-        exit(1);
+        error("Configuration file needed");
     }
     // parsing config file
     int PERIOD_FETCH = 180;
@@ -149,8 +148,7 @@ int main (int argc, char *argv[]){
             stringstream(t[1]) >> re; // str to int
             NUM_PARSE = re;
             if (NUM_PARSE < 1 || NUM_PARSE > 8){
-                cout << "ERROR: NUM_PARSE out of range!" << endl;
-                exit(1);
+                error("NUM_PARSE out of range!");
             }   
         }
         else if (t[0] == "SEARCH_FILE"){
@@ -170,12 +168,12 @@ int main (int argc, char *argv[]){
     }
     char const* cstr = SEARCH_FILE.c_str();
     vector<string> searches = get(cstr);
-    cout << "here" << endl;
-    for (unsigned j = 0; j < searches.size(); j++){
-        cout << searches[j] << endl;
+    // cout << "here" << endl;
+    char const* sstr = SITE_FILE.c_str();
+    vector<string> sites = get(sstr);
+    for (size_t i = 0; i < sites.size(); i++){
+        cout << webFetcher(sites[i]).memory << endl;
     }
-
-    cout << webFetcher("www.cnn.com/").memory << endl;
 //    cout << PERIOD_FETCH << endl;
 //    cout << NUM_FETCH << endl;
 //    cout << NUM_PARSE << endl;
