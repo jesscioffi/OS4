@@ -98,9 +98,14 @@ int main (int argc, char *argv[]){
     }
     char const* cstr = SEARCH_FILE.c_str();
     vector<string> searches = get(cstr);
-    cout << "here" << endl;
+//    cout << "here" << endl;
     for (unsigned j = 0; j < searches.size(); j++){
         cout << searches[j] << endl;
+    }
+    char const* sstr = SITE_FILE.c_str();
+    vector<string> sites = get(sstr);
+    for (unsigned j = 0; j < sites.size(); j++){
+        cout << sites[j] << endl;
     }
 //    cout << PERIOD_FETCH << endl;
 //    cout << NUM_FETCH << endl;
