@@ -16,6 +16,8 @@
 #include <utility>
 #include <ctime>
 #include <typeinfo>
+#include <thread>
+#include <signal.h>
 
 using namespace std;
 
@@ -25,10 +27,23 @@ struct MemoryStruct {
 };
 
 struct MemoryStruct chunk;
+condition_variable fetchEmpty;
+condition_variable parseEmpty;
+int PERIOD_FETCH = 180;
+int NUM_FETCH = 1;
+int NUM_PARSE = 1;
+string SEARCH_FILE = "";
+string SITE_FILE = "";
+vector<string> searches;
+vector<string> sites;
 
 void error(string message){
     cout << "ERROR: " << message << endl;
     exit(1);
+}
+
+void handler() {
+  alarm(PERIOD_FETCH);
 }
 
 // function to return the time
@@ -50,6 +65,8 @@ void time(){
     
     cout << (now->tm_sec);
 }
+
+
 
 // function to return vector of str from site and search files
 vector<string> get(char const* ofile){
@@ -91,7 +108,6 @@ void webFetcher(string website) {
   chunk.memory = (char *)malloc(1);
   chunk.size = 0;
 
-  curl_global_init(CURL_GLOBAL_ALL);
   curl_handle = curl_easy_init();
   curl_easy_setopt(curl_handle, CURLOPT_URL, website.c_str());
   curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
@@ -107,7 +123,6 @@ void webFetcher(string website) {
   }
 
   curl_easy_cleanup(curl_handle);
-  curl_global_cleanup();
 }  
 
 int wordCount(string file, string phrase) {
@@ -128,12 +143,8 @@ int main (int argc, char *argv[]){
     if (argc == 1){ // not enough arguments given in command line
         error("Configuration file needed");
     }
+    curl_global_init(CURL_GLOBAL_ALL);
     // parsing config file
-    int PERIOD_FETCH = 180;
-    int NUM_FETCH = 1;
-    int NUM_PARSE = 1;
-    string SEARCH_FILE = "";
-    string SITE_FILE = "";
     string stream; // line from file
     string token; // broken down string
     string t[2]; //array of words
@@ -188,9 +199,11 @@ int main (int argc, char *argv[]){
         error("No Search or Site files found");
     }
     char const* cstr = SEARCH_FILE.c_str();
-    vector<string> searches = get(cstr);
+    searches = get(cstr);
     char const* sstr = SITE_FILE.c_str();
-    vector<string> sites = get(sstr);
+    sites = get(sstr);
+    signal(SIGALRM, handler);
+    alarm(PERIOD_FETCH);
     for (size_t i = 0; i < sites.size(); i++){
         webFetcher(sites[i]);
         curlfetch.push_back(chunk.memory);
@@ -203,6 +216,6 @@ int main (int argc, char *argv[]){
             cout << "," << searches[i] << "," << sites[j] << "," << wordCount(curlfetch[j], searches[i]) << endl;
         }
     }
-
+    curl_global_cleanup();
     return 0;
 }
