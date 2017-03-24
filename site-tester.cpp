@@ -33,22 +33,50 @@ void error(string message){
 
 // function to return the time
 string time(){
+    string test = "";
+    int temp;
     string s = "";
     time_t t = time(0);
     struct tm *now = localtime(&t);
     cout.width(2);
     cout.fill('0');
-    cout << (now->tm_mon + 1) << endl;
+
+    temp = (now->tm_mon +1);
+    test = to_string(temp);
+    //cout << (now->tm_mon + 1) << endl;
+    s.append(test);
     s.append("-");
-    cout << (now->tm_mday) << endl;
+
+    temp = (now->tm_mday);
+    test = to_string(temp);
+    //cout << (now->tm_mday) << endl;
+    s.append(test);
     s.append("-");
-    cout << (now->tm_year - 100) << endl;
+    
+
+    temp = (now->tm_year - 100);
+    test = to_string(temp);
+    //cout << (now->tm_year - 100) << endl;
+    s.append(test);
     s.append("-");
-    cout << (now->tm_hour) << endl;
+    
+    temp = (now->tm_hour);
+    test = to_string(temp);
+    //cout << (now->tm_hour) << endl;
+    s.append(test);
     s.append(":");
-    cout << (now->tm_min) << endl;
+   
+    temp = (now->tm_min);
+    test = to_string(temp);
+    //cout << (now->tm_min) << endl;
+    s.append(test);
     s.append(":");
-    cout << (now->tm_sec) << endl;
+    
+
+    temp = (now->tm_sec);
+    test = to_string(temp);
+    //cout << (now->tm_sec) << endl;
+    s.append(test);
  //   cout << s << endl;
     return s;
 }
@@ -214,12 +242,13 @@ int main (int argc, char *argv[]){
 
     for (size_t j = 0; j < sites.size(); j++){
         for (size_t i = 0; i < searches.size(); i++){
-            cout << sites[j] << " : " << searches[i] << " : " << wordCount(curlfetch[j], searches[i]) << endl;
+            string s = time();
+            //cout << s << "," << sites[j] << " : " << searches[i] << " : " << wordCount(curlfetch[j], searches[i]) << endl;
+            cout << s << "," << searches[i] << "," << sites[j] << "," << wordCount(curlfetch[j], searches[i]) << endl;
 //            int o = wordCount(curlfetch[j], searches[i]);
         }
     }
-    string s = time();
-    cout << s << endl;
+    //cout << s << endl;
 //    cout << PERIOD_FETCH << endl;
 //    cout << NUM_FETCH << endl;
 //    cout << NUM_PARSE << endl;
