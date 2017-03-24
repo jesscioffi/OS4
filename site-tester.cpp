@@ -18,17 +18,27 @@
 #include <typeinfo>
 #include <thread>
 #include <signal.h>
+#include <pthread.h>
+#include <thread>
+#include <mutex>
 
 using namespace std;
 
+// Global Variables
 struct MemoryStruct {
   char *memory;
   size_t size;
 };
 
 struct MemoryStruct chunk;
-condition_variable fetchEmpty;
-condition_variable parseEmpty;
+
+struct Pair {
+  string url;
+  string code;
+};
+
+pthread_cond_t fetchEmpty;
+pthread_cond_t parseEmpty;
 int PERIOD_FETCH = 180;
 int NUM_FETCH = 1;
 int NUM_PARSE = 1;
@@ -36,58 +46,47 @@ string SEARCH_FILE = "";
 string SITE_FILE = "";
 vector<string> searches;
 vector<string> sites;
+pthread_mutex_t lock0 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock1 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock2 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock3 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock4 = PTHREAD_MUTEX_INITIALIZER;
+ofstream fs;
+int COUNTER = 1;
 
+// Functions
 void error(string message){
     cout << "ERROR: " << message << endl;
     exit(1);
 }
 
-void handler() {
+void handler(int s) {
+  COUNTER++;
   alarm(PERIOD_FETCH);
+  fs.close();
+  stringstream ss;
+  ss<<COUNTER;
+  string f = ss.str();
+  string n = f.append(".csv");
+  fs.open(n);
 }
 
 // function to return the time
 void time(){
     time_t t = time(0);
     struct tm *now = localtime(&t);
-    cout.width(2);
-    cout.fill('0');
 
-    cout << (now->tm_mon + 1) << "-";
+    fs << (now->tm_mon + 1) << "-";
 
-    cout << (now->tm_mday) << "-";
+    fs << (now->tm_mday) << "-";
     
-    cout << (now->tm_year - 100) << "-";
+    fs << (now->tm_year - 100) << "-";
     
-    cout << (now->tm_hour) << ":";
+    fs << (now->tm_hour) << ":";
    
-    cout << (now->tm_min) << ":";
+    fs << (now->tm_min) << ":";
     
-    cout << (now->tm_sec);
-}
-
-
-
-void * fetch(void * args) {
-    while(1) { //prevents the thread from dying so you do not have to create more threads
-        pthread_mutex_lock(&(lock));
-        
-        while(queue empty) { //the queue holding the urls
-            pthread_cond_wait(); //obviously more args  
-        }
-        //process the info from queue holding urls
-        //pop url from queue
-        pthread_broadcast(); //not correct syntax, but you need to broadcast
-        pthread_mutux_unlock(&(lock));
-        
-        //create stuff to put into the producer
-        //lock
-        //literally follow producer pseudo code
-        //push back result into queue
-        //broad cast
-        //unlock
-    }
-  return NULL;
+    fs << (now->tm_sec);
 }
 
 // function to return vector of str from site and search files
@@ -123,7 +122,7 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
   return realsize;
 }
 
-void webFetcher(string website) {
+bool webFetcher(string website, string &buffer) {
   CURL *curl_handle;
   CURLcode res;
 //  struct MemoryStruct chunk;
@@ -139,12 +138,17 @@ void webFetcher(string website) {
 
   if(res != CURLE_OK) {
     cout << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
+    return false;
     }
   else {
-//    cout << chunk.size << " bytes retrived" << endl;
   }
 
+  buffer = chunk.memory;
+
   curl_easy_cleanup(curl_handle);
+  free(chunk.memory);
+
+  return true;
 }  
 
 int wordCount(string file, string phrase) {
@@ -159,7 +163,67 @@ int wordCount(string file, string phrase) {
    return counter;
 }
 
-vector<string> curlfetch;
+vector<Pair> curlfetch;
+
+void * fetch(void * uneeded) {
+    string add = "";
+
+    while(1) { //prevents the thread from dying so you do not have to create more threads
+        pthread_mutex_lock(&(lock0));
+        
+        while(sites.empty()) { //the queue holding the urls
+            pthread_cond_wait(&fetchEmpty, &lock0); //obviously more args  
+        }
+        
+        //process the info from queue holding urls
+      //  pthread_mutex_lock(&lock1);
+        string str = sites.front(); //pop url from queue
+        sites.pop_back();
+      //  pthread_mutex_unlock(&lock1);
+
+        pthread_cond_broadcast(&fetchEmpty); //not correct syntax, but you need to broadcast
+        pthread_mutex_unlock(&(lock0));
+        
+        //create stuff to put into the producer
+        //lock
+        bool success = webFetcher(str, add);
+        if (success == true) {
+          pthread_mutex_lock(&lock2);
+          Pair temporary;
+          temporary.url = str;
+          temporary.code = add;
+          curlfetch.push_back(temporary);
+          pthread_cond_broadcast(&parseEmpty);
+          pthread_mutex_unlock(&lock2);
+        }
+
+        //literally follow producer pseudo code
+        //push back result into queue
+        //broad cast
+        //unlock
+    }
+  return NULL;
+}
+
+void * parse (void * k) {
+  while (curlfetch.empty()) {
+    pthread_mutex_lock(&(lock4));
+    pthread_cond_wait(&parseEmpty, &lock4);
+    pthread_mutex_unlock(&(lock4));
+  }
+
+  Pair str1 = curlfetch.front();
+  curlfetch.pop_back();
+
+  for (size_t i = 0; i < searches.size(); i++){
+      time();
+      pthread_mutex_lock(&(lock3));
+      fs << "," << searches[i] << "," << str1.url << "," << wordCount(str1.code, searches[i]) << endl;
+  //    cout<<"hi\n";
+      pthread_mutex_unlock(&(lock3));
+  }
+  return NULL;
+}
 
 int main (int argc, char *argv[]){
     if (argc == 1){ // not enough arguments given in command line
@@ -218,26 +282,38 @@ int main (int argc, char *argv[]){
     }   
     infile.close(); // closes config file
     if (SEARCH_FILE == "" || SITE_FILE == ""){
-        error("No Search or Site files found");
+       error("No Search or Site files found");
     }
     char const* cstr = SEARCH_FILE.c_str();
     searches = get(cstr);
     char const* sstr = SITE_FILE.c_str();
     sites = get(sstr);
+    pthread_t* fThreads = (pthread_t*)malloc(NUM_FETCH * sizeof(pthread_t));
+    pthread_t* pThreads = (pthread_t*)malloc(NUM_PARSE * sizeof(pthread_t));
     signal(SIGALRM, handler);
     alarm(PERIOD_FETCH);
-    for (size_t i = 0; i < sites.size(); i++){
+    /*for (size_t i = 0; i < sites.size(); i++){
         webFetcher(sites[i]);
         curlfetch.push_back(chunk.memory);
         free(chunk.memory);
+    }*/
+
+    fs.open("1.csv");
+    for (int t = 0; t < NUM_FETCH; t++){
+        pthread_create(&fThreads[t], NULL, fetch, NULL);
+    }
+    while (curlfetch.empty()) {
+      pthread_mutex_lock(&(lock1));
+      pthread_cond_wait(&parseEmpty, &lock1);
+      pthread_mutex_unlock(&(lock1));
     }
 
-    for (size_t j = 0; j < sites.size(); j++){
-        for (size_t i = 0; i < searches.size(); i++){
-            time();
-            cout << "," << searches[i] << "," << sites[j] << "," << wordCount(curlfetch[j], searches[i]) << endl;
-        }
+    for (int t = 0; t < NUM_PARSE; t++) {
+        pthread_create(&pThreads[t], NULL, parse, NULL);
     }
+
+    for (;;)pause();
+
     curl_global_cleanup();
     return 0;
 }

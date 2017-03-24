@@ -1,10 +1,10 @@
 CC=/usr/bin/g++
-CFLAGS=-Wall
+CFLAGS=-std=c++0x -Wall -ggdb
 
 all: site-tester
 
 site-tester: site-tester.o
-	$(CC) -lcurl -o site-tester site-tester.o
+	$(CC) $(CFLAGS) -lcurl -lpthread -o site-tester site-tester.o
 
 site-tester.o:
 	$(CC) $(CFLAGS) -c site-tester.cpp
