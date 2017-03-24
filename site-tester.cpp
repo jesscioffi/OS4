@@ -32,53 +32,23 @@ void error(string message){
 }
 
 // function to return the time
-string time(){
-    string test = "";
-    int temp;
-    string s = "";
+void time(){
     time_t t = time(0);
     struct tm *now = localtime(&t);
     cout.width(2);
     cout.fill('0');
 
-    temp = (now->tm_mon +1);
-    test = to_string(temp);
-    //cout << (now->tm_mon + 1) << endl;
-    s.append(test);
-    s.append("-");
+    cout << (now->tm_mon + 1) << "-";
 
-    temp = (now->tm_mday);
-    test = to_string(temp);
-    //cout << (now->tm_mday) << endl;
-    s.append(test);
-    s.append("-");
+    cout << (now->tm_mday) << "-";
     
-
-    temp = (now->tm_year - 100);
-    test = to_string(temp);
-    //cout << (now->tm_year - 100) << endl;
-    s.append(test);
-    s.append("-");
+    cout << (now->tm_year - 100) << "-";
     
-    temp = (now->tm_hour);
-    test = to_string(temp);
-    //cout << (now->tm_hour) << endl;
-    s.append(test);
-    s.append(":");
+    cout << (now->tm_hour) << ":";
    
-    temp = (now->tm_min);
-    test = to_string(temp);
-    //cout << (now->tm_min) << endl;
-    s.append(test);
-    s.append(":");
+    cout << (now->tm_min) << ":";
     
-
-    temp = (now->tm_sec);
-    test = to_string(temp);
-    //cout << (now->tm_sec) << endl;
-    s.append(test);
- //   cout << s << endl;
-    return s;
+    cout << (now->tm_sec);
 }
 
 // function to return vector of str from site and search files
@@ -92,7 +62,6 @@ vector<string> get(char const* ofile){
     }
     while (ifs >> info){
         vstrings.push_back(info);
-    //    cout << info << endl;
     }
     ifs.close();
     return vstrings;
@@ -115,8 +84,7 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
   return realsize;
 }
 
-//MemoryStruct webFetcher(string website) {
-  void webFetcher(string website) {
+void webFetcher(string website) {
   CURL *curl_handle;
   CURLcode res;
 //  struct MemoryStruct chunk;
@@ -132,19 +100,14 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
   res = curl_easy_perform(curl_handle);
 
   if(res != CURLE_OK) {
-//    fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
     cout << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
     }
   else {
-//    printf("%lu bytes retrieved\n", (long)chunk.size);
 //    cout << chunk.size << " bytes retrived" << endl;
   }
 
   curl_easy_cleanup(curl_handle);
-  //free(chunk.memory);
   curl_global_cleanup();
-
-//  return chunk;
 }  
 
 int wordCount(string file, string phrase) {
@@ -154,10 +117,8 @@ int wordCount(string file, string phrase) {
       index = file.find(phrase, index+1);
       if (index != string::npos) {
          counter++;
-  //      cout << "counter is " << counter << " index is: " << index << endl;
       }
    } while (index != string::npos);
-//    cout << "last counter is " << counter << endl;
    return counter;
 }
 
@@ -228,32 +189,20 @@ int main (int argc, char *argv[]){
     }
     char const* cstr = SEARCH_FILE.c_str();
     vector<string> searches = get(cstr);
-    // cout << "here" << endl;
     char const* sstr = SITE_FILE.c_str();
     vector<string> sites = get(sstr);
     for (size_t i = 0; i < sites.size(); i++){
         webFetcher(sites[i]);
         curlfetch.push_back(chunk.memory);
-//        cout << chunk.memory << endl;
         free(chunk.memory);
-  //       cout << webFetcher(sites[i]).memory << endl;
- //       free(webFetcher(sites[i]).memory);
     }
 
     for (size_t j = 0; j < sites.size(); j++){
         for (size_t i = 0; i < searches.size(); i++){
-            string s = time();
-            //cout << s << "," << sites[j] << " : " << searches[i] << " : " << wordCount(curlfetch[j], searches[i]) << endl;
-            cout << s << "," << searches[i] << "," << sites[j] << "," << wordCount(curlfetch[j], searches[i]) << endl;
-//            int o = wordCount(curlfetch[j], searches[i]);
+            time();
+            cout << "," << searches[i] << "," << sites[j] << "," << wordCount(curlfetch[j], searches[i]) << endl;
         }
     }
-    //cout << s << endl;
-//    cout << PERIOD_FETCH << endl;
-//    cout << NUM_FETCH << endl;
-//    cout << NUM_PARSE << endl;
-//    cout << SEARCH_FILE << endl;
-//    cout << SITE_FILE << endl;
 
     return 0;
 }
