@@ -1,7 +1,8 @@
 Notre
-Cub Scouts
-CSE30341
+notre
 Operating
 Systems
-Striegel
-Thain
+CNN
+Python
+code
+dame

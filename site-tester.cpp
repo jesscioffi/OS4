@@ -14,7 +14,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <utility>
-
+#include <ctime>
+#include <typeinfo>
 
 using namespace std;
 
@@ -28,6 +29,28 @@ struct MemoryStruct chunk;
 void error(string message){
     cout << "ERROR: " << message << endl;
     exit(1);
+}
+
+// function to return the time
+string time(){
+    string s = "";
+    time_t t = time(0);
+    struct tm *now = localtime(&t);
+    cout.width(2);
+    cout.fill('0');
+    cout << (now->tm_mon + 1) << endl;
+    s.append("-");
+    cout << (now->tm_mday) << endl;
+    s.append("-");
+    cout << (now->tm_year - 100) << endl;
+    s.append("-");
+    cout << (now->tm_hour) << endl;
+    s.append(":");
+    cout << (now->tm_min) << endl;
+    s.append(":");
+    cout << (now->tm_sec) << endl;
+ //   cout << s << endl;
+    return s;
 }
 
 // function to return vector of str from site and search files
@@ -195,6 +218,8 @@ int main (int argc, char *argv[]){
 //            int o = wordCount(curlfetch[j], searches[i]);
         }
     }
+    string s = time();
+    cout << s << endl;
 //    cout << PERIOD_FETCH << endl;
 //    cout << NUM_FETCH << endl;
 //    cout << NUM_PARSE << endl;
