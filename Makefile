@@ -10,4 +10,4 @@ site-tester.o:
 	$(CC) $(CFLAGS) -c site-tester.cpp
 
 clean:
-	-rm *.o site-tester
+	-rm *.o site-tester *.csv 
