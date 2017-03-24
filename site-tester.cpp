@@ -53,22 +53,13 @@ pthread_mutex_t lock3 = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t lock4 = PTHREAD_MUTEX_INITIALIZER;
 ofstream fs;
 int COUNTER = 1;
+int keeplooking = 1;
+int keeplooking2 = 1;
 
 // Functions
 void error(string message){
     cout << "ERROR: " << message << endl;
     exit(1);
-}
-
-void handler(int s) {
-  COUNTER++;
-  alarm(PERIOD_FETCH);
-  fs.close();
-  stringstream ss;
-  ss<<COUNTER;
-  string f = ss.str();
-  string n = f.append(".csv");
-  fs.open(n);
 }
 
 // function to return the time
@@ -103,6 +94,29 @@ vector<string> get(char const* ofile){
     }
     ifs.close();
     return vstrings;
+}
+
+void handler(int s) {
+  cout << "in handler" << endl;
+  sites=get(SITE_FILE.c_str());
+  pthread_cond_broadcast(&fetchEmpty);
+  COUNTER++;
+  fs.close();
+  if (keeplooking2 == 1) {
+    alarm(PERIOD_FETCH);
+    stringstream ss;
+    ss<<COUNTER;
+    string f = ss.str();
+    string n = f.append(".csv");
+    fs.open(n);
+  }
+  else {
+    keeplooking = 0;
+  }
+}
+
+void h (int p) {
+  keeplooking2 = 0;
 }
 
 static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp) {
@@ -177,10 +191,10 @@ void * fetch(void * uneeded) {
         
         //process the info from queue holding urls
       //  pthread_mutex_lock(&lock1);
-        string str = sites.front(); //pop url from queue
+        string str = sites.back(); //pop url from queue
         sites.pop_back();
       //  pthread_mutex_unlock(&lock1);
-
+        cout << "hello" << endl;
         pthread_cond_broadcast(&fetchEmpty); //not correct syntax, but you need to broadcast
         pthread_mutex_unlock(&(lock0));
         
@@ -206,21 +220,25 @@ void * fetch(void * uneeded) {
 }
 
 void * parse (void * k) {
-  while (curlfetch.empty()) {
+  while(1) {
     pthread_mutex_lock(&(lock4));
-    pthread_cond_wait(&parseEmpty, &lock4);
+    while (curlfetch.empty()) {
+      pthread_cond_wait(&parseEmpty, &lock4);
+    }
+
+    Pair str1 = curlfetch.front();
+    curlfetch.pop_back();
+    cout << str1.url << endl;
+    cout << "howdy" << endl;
+    pthread_cond_broadcast(&parseEmpty);
     pthread_mutex_unlock(&(lock4));
-  }
 
-  Pair str1 = curlfetch.front();
-  curlfetch.pop_back();
-
-  for (size_t i = 0; i < searches.size(); i++){
+    for (size_t i = 0; i < searches.size(); i++){
       time();
       pthread_mutex_lock(&(lock3));
       fs << "," << searches[i] << "," << str1.url << "," << wordCount(str1.code, searches[i]) << endl;
-  //    cout<<"hi\n";
       pthread_mutex_unlock(&(lock3));
+    }
   }
   return NULL;
 }
@@ -288,6 +306,7 @@ int main (int argc, char *argv[]){
     searches = get(cstr);
     char const* sstr = SITE_FILE.c_str();
     sites = get(sstr);
+    cout << sites.size() << endl;
     pthread_t* fThreads = (pthread_t*)malloc(NUM_FETCH * sizeof(pthread_t));
     pthread_t* pThreads = (pthread_t*)malloc(NUM_PARSE * sizeof(pthread_t));
     signal(SIGALRM, handler);
@@ -312,7 +331,11 @@ int main (int argc, char *argv[]){
         pthread_create(&pThreads[t], NULL, parse, NULL);
     }
 
-    for (;;)pause();
+    signal(SIGINT,h);
+    signal(SIGHUP,h);
+    while (keeplooking) {
+      pause();     
+    }
 
     curl_global_cleanup();
     return 0;
