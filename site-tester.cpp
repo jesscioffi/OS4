@@ -24,7 +24,10 @@
 
 using namespace std;
 
-// Global Variables
+/*
+Global Variables
+*/
+
 struct MemoryStruct {
     char *memory;
     size_t size;
@@ -56,7 +59,11 @@ int COUNTER = 1;
 int keeplooking = 1;
 int keeplooking2 = 1;
 
-// Functions
+/*
+Functions
+*/
+
+// error function
 void error(string message){
     cout << "ERROR: " << message << endl;
     exit(1);
@@ -231,6 +238,10 @@ void * parse (void * k) {
     }
     return NULL;
 }
+
+/*
+Main
+*/
 
 int main (int argc, char *argv[]){
     if (argc == 1){ // not enough arguments given in command line
