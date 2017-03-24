@@ -68,6 +68,28 @@ void time(){
 
 
 
+void * fetch(void * args) {
+    while(1) { //prevents the thread from dying so you do not have to create more threads
+        pthread_mutex_lock(&(lock));
+        
+        while(queue empty) { //the queue holding the urls
+            pthread_cond_wait(); //obviously more args  
+        }
+        //process the info from queue holding urls
+        //pop url from queue
+        pthread_broadcast(); //not correct syntax, but you need to broadcast
+        pthread_mutux_unlock(&(lock));
+        
+        //create stuff to put into the producer
+        //lock
+        //literally follow producer pseudo code
+        //push back result into queue
+        //broad cast
+        //unlock
+    }
+  return NULL;
+}
+
 // function to return vector of str from site and search files
 vector<string> get(char const* ofile){
     string info;
