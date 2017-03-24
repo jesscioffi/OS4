@@ -40,8 +40,8 @@ struct Pair {
     string code;
 };
 
-pthread_cond_t fetchEmpty;
-pthread_cond_t parseEmpty;
+pthread_cond_t fetchEmpty; // condition variable for fetch
+pthread_cond_t parseEmpty; // condition variable for parse
 int PERIOD_FETCH = 180;
 int NUM_FETCH = 1;
 int NUM_PARSE = 1;
@@ -54,7 +54,7 @@ pthread_mutex_t lock1 = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t lock2 = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t lock3 = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t lock4 = PTHREAD_MUTEX_INITIALIZER;
-ofstream fs;
+ofstream fs; // file object
 int COUNTER = 1;
 int keeplooking = 1;
 int keeplooking2 = 1;
@@ -103,6 +103,7 @@ vector<string> get(char const* ofile){
     return vstrings;
 }
 
+// handler
 void handler(int s) {
     sites=get(SITE_FILE.c_str());
     pthread_cond_broadcast(&fetchEmpty);
@@ -121,6 +122,7 @@ void handler(int s) {
     }
 }
 
+// second handler
 void h (int p) {
     keeplooking2 = 0;
 }
@@ -142,6 +144,7 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
     return realsize;
 }
 
+// curl
 bool webFetcher(string website, string &buffer) {
     CURL *curl_handle;
     CURLcode res;
@@ -157,7 +160,6 @@ bool webFetcher(string website, string &buffer) {
     res = curl_easy_perform(curl_handle);
 
     if(res != CURLE_OK) {
-//        cout << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
         cout << "curl failed!" << endl;
         return false;
     }
@@ -172,6 +174,7 @@ bool webFetcher(string website, string &buffer) {
     return true;
 }  
 
+// word count
 int wordCount(string file, string phrase) {
     int counter = 0;
     size_t index = -1;
@@ -186,6 +189,7 @@ int wordCount(string file, string phrase) {
 
 vector<Pair> curlfetch;
 
+// fetch function
 void * fetch(void * uneeded) {
     string add = "";
 
@@ -217,6 +221,7 @@ void * fetch(void * uneeded) {
     return NULL;
 }
 
+// parse function
 void * parse (void * k) {
     while(1) {
         pthread_mutex_lock(&(lock4));
@@ -229,7 +234,7 @@ void * parse (void * k) {
         pthread_cond_broadcast(&parseEmpty);
         pthread_mutex_unlock(&(lock4));
 
-        for (size_t i = 0; i < searches.size(); i++){
+        for (size_t i = 0; i < searches.size(); i++){ // puts the info to the file based on the locks
             time();
             pthread_mutex_lock(&(lock3));
             fs << "," << searches[i] << "," << str1.url << "," << wordCount(str1.code, searches[i]) << endl;
@@ -316,22 +321,22 @@ int main (int argc, char *argv[]){
     for (int t = 0; t < NUM_FETCH; t++){
         pthread_create(&fThreads[t], NULL, fetch, NULL);
     }
-    while (curlfetch.empty()) {
+    while (curlfetch.empty()) { // if it is empty, wait on the condition variable
         pthread_mutex_lock(&(lock1));
         pthread_cond_wait(&parseEmpty, &lock1);
         pthread_mutex_unlock(&(lock1));
     }
 
-    for (int t = 0; t < NUM_PARSE; t++) {
+    for (int t = 0; t < NUM_PARSE; t++) { // creates the threads
         pthread_create(&pThreads[t], NULL, parse, NULL);
     }
 
-    signal(SIGINT,h);
-    signal(SIGHUP,h);
+    signal(SIGINT,h); // handles sigint
+    signal(SIGHUP,h); // handles sighup
     while (keeplooking) {
         pause();     
     }
 
-    curl_global_cleanup();
+    curl_global_cleanup(); // cleans up globally
     return 0;
 }

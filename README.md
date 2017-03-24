@@ -10,6 +10,7 @@ config file and then also parses the URLs and the Search terms from the denoted 
 file names given in the config.txt, then the program does not execute.
 Once the executable is running, the user can exit the program with Ctrl+C. This tells the program
 to stop as soon as it finishes the file it is currently working on so it exits "gracefully".
+When make clean is run, the .csv files that are created, as well as the .o and the executables are deleted.
 
 Parameters:
 The config.txt file contains all the parameters needed to run our project. 
