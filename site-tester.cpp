@@ -200,9 +200,9 @@ void * fetch(void * uneeded) {
         sites.pop_back();
         
         pthread_cond_broadcast(&fetchEmpty); //not correct syntax, but you need to broadcast
+        bool success = webFetcher(str, add);
         pthread_mutex_unlock(&(lock0));
 
-        bool success = webFetcher(str, add);
         if (success == true) {
             pthread_mutex_lock(&lock2);
             Pair temporary;
