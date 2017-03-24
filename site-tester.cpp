@@ -150,7 +150,8 @@ bool webFetcher(string website, string &buffer) {
     res = curl_easy_perform(curl_handle);
 
     if(res != CURLE_OK) {
-        cout << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
+//        cout << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
+        cout << "curl failed!" << endl;
         return false;
     }
     else {
